@@ -1,5 +1,12 @@
 // Background Service Worker for MCQ Solver AI
 
+// Load local configuration (API keys) if available
+try {
+  importScripts('config.js');
+} catch (e) {
+  console.warn("Local config.js not found. Using internal placeholders.");
+}
+
 console.log("MCQ Solver AI: Background service worker initialized.");
 
 // Handle icon activation and grayscale
@@ -47,10 +54,10 @@ async function updateIcon(isActive) {
 
 
 // API Keys - Developer needs to fill these in before distributing
-// The extension will use these silently without asking the student.
+// We prioritize keys from the local config.js file (which is ignored by Git)
 const CONFIG = {
-  GEMINI_API_KEY: "AIzaSyDhlIJAbG-2CQ6Y8X5DdQytWqYz7O44yZ0",
-  GROK_API_KEY: "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",
+  GEMINI_API_KEY: (typeof API_KEYS !== 'undefined') ? API_KEYS.GEMINI_API_KEY : "YOUR_GEMINI_API_KEY",
+  GROK_API_KEY: (typeof API_KEYS !== 'undefined') ? API_KEYS.GROK_API_KEY : "YOUR_GROK_API_KEY",
   OPENAI_API_KEY: "YOUR_OPENAI_API_KEY_HERE"
 };
 

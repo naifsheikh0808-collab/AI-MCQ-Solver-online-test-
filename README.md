@@ -14,19 +14,19 @@ A clean, professional, stealthy, and highly educational Chrome Extension designe
 
 ## Developer Setup (Adding API Keys)
 
-As requested, this extension is fully online and does not ask the user for API keys. **Before building or distributing**, you (the developer) must insert your API keys in the background script.
+This extension uses a fallback chain of AI models. To keep the project secure and prevent API key leaks, keys are stored in a local file that is ignored by Git.
 
-1. Open `background/background.js`.
-2. Locate the `CONFIG` object at the top of the file:
-   ```javascript
-   const CONFIG = {
-     GEMINI_API_KEY: "YOUR_GEMINI_API_KEY_HERE",
-     GROK_API_KEY: "YOUR_GROK_API_KEY_HERE",
-     OPENAI_API_KEY: "YOUR_OPENAI_API_KEY_HERE"
-   };
-   ```
-3. Replace the placeholder strings with your actual API keys.
-   - *Note: To keep this free, you can just use the Gemini API key and leave the others blank. The system will try Gemini first, and if it succeeds, it will not use the others.*
+1.  Navigate to the `background/` folder.
+2.  Find the file named `config.sample.js`.
+3.  **Rename** it to `config.js`.
+4.  Open `config.js` and insert your API keys:
+    ```javascript
+    const API_KEYS = {
+      GEMINI_API_KEY: "AIza...", // Your Gemini API Key
+      GROK_API_KEY: "gsk_..."    // Your Groq API Key
+    };
+    ```
+5.  Save the file. The extension will now automatically use these keys.
 
 ## Installation (Unpacked for Chrome)
 
