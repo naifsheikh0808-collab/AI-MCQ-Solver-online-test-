@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCQ Solver AI - Options</title>
+  <link rel="stylesheet" href="options.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Settings</h1>
+    </header>
+    
+    <main>
+      <section class="settings-group">
+        <h2>AI Engine Configuration</h2>
+        <p class="description">Select your preferred AI behavior.</p>
+        
+        <div class="setting-item">
+          <label>
+            <input type="checkbox" id="stealthMode">
+            Enable Stealth Mode
+          </label>
+          <p class="help-text">Makes the popup smaller and harder to notice.</p>
+        </div>
+        
+        <div class="setting-item">
+          <label>
+            <input type="checkbox" id="autoSolve">
+            Auto-Detect & Solve
+          </label>
+          <p class="help-text">Automatically process questions when detected on the page.</p>
+        </div>
+      </section>
+      
+      <div class="actions">
+        <button id="saveBtn" class="primary-btn">Save Settings</button>
+      </div>
+      <div id="statusMessage" class="status-msg hidden">Saved successfully!</div>
+    </main>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>

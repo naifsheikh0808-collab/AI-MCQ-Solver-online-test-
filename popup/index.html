@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCQ Solver AI</title>
+  <link rel="stylesheet" href="popup.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>MCQ Solver AI</h1>
+      <div class="toggle-container">
+        <label class="toggle-switch">
+          <input type="checkbox" id="activationToggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </header>
+
+    <main>
+      <div class="actions">
+        <button id="solveBtn" class="primary-btn">Press Ctrl + Shift + Q to solve</button>
+      </div>
+
+      <div class="history-section">
+        <div class="history-header">
+          <h3>Recent History</h3>
+          <button id="clearHistoryBtn" class="clear-btn">Clear All</button>
+        </div>
+        <div id="historyList" class="history-list">
+          <p class="empty-state">No recent questions.</p>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <button id="optionsBtn" class="link-btn">Settings</button>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+
+</html>

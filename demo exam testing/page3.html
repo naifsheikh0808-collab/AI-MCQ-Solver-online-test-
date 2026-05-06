@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock Secure Test Environment - Page 3</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            
+            /* Anti-copy CSS */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .exam-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .warning-banner {
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid #f87171;
+        }
+
+        h2 { margin-top: 0; }
+        
+        .question {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options label {
+            display: block;
+            background: #f8fafc;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+        }
+
+        .options label:hover {
+            background: #e2e8f0;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        
+        .nav-btn.disabled {
+            background-color: #cbd5e1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="exam-container">
+        <div class="warning-banner" id="warningBanner">
+            SECURE EXAM MODE: Copying, Right-Clicking, and Tab Switching are strictly prohibited!
+        </div>
+
+        <h2>Final Exam - Computer Science (3/3)</h2>
+        <div class="question">
+            3. In Python, which keyword is used to handle exceptions?
+        </div>
+        <div class="options">
+            <label><input type="radio" name="q3" value="A"> A) catch</label>
+            <label><input type="radio" name="q3" value="B"> B) except</label>
+            <label><input type="radio" name="q3" value="C"> C) handle</label>
+            <label><input type="radio" name="q3" value="D"> D) error</label>
+        </div>
+
+        <div class="navigation">
+            <a href="page2.html" class="nav-btn">Previous</a>
+            <a href="#" class="nav-btn disabled">Finish</a>
+        </div>
+    </div>
+
+    <script>
+        // Anti-Right Click (Context Menu)
+        document.addEventListener('contextmenu', event => {
+            event.preventDefault();
+            alert("Security Alert: Right-clicking is disabled during the exam.");
+        });
+
+        // Anti-Copy (Keyboard Shortcuts)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'x' || e.key === 'a')) {
+                e.preventDefault();
+                alert("Security Alert: Copy/Paste keyboard shortcuts are disabled.");
+            }
+        });
+
+        // Anti-Tab Switching (Visibility Change)
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                const banner = document.getElementById('warningBanner');
+                banner.style.backgroundColor = '#991b1b';
+                banner.style.color = 'white';
+                banner.innerText = "WARNING RECORDED: You left the exam tab!";
+                alert("Security Alert: You have switched tabs. This violation has been recorded.");
+            }
+        });
+    </script>
+</body>
+</html>

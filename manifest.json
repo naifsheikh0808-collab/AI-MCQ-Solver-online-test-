@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "MCQ Solver AI",
+  "version": "1.0.0",
+  "description": "Intelligent, stealthy, and educational assistant for answering online MCQs with clear explanations.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "contextMenus",
+    "commands"
+  ],
+  "host_permissions": [
+    "*://*/*"
+  ],
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup/index.html",
+    "default_title": "MCQ Solver AI",
+    "default_icon": "icons/logo.png"
+  },
+  "icons": {
+    "16": "icons/logo.png",
+    "48": "icons/logo.png",
+    "128": "icons/logo.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/logo.png", "icons/*.png"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "options_page": "options/index.html",
+  "commands": {
+    "solve_mcq": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Q",
+        "mac": "Command+Shift+Q"
+      },
+      "description": "Solve MCQ on current page"
+    }
+  }
+}
