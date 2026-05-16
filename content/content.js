@@ -613,8 +613,10 @@ function showPopup(data, isStealth, isCached) {
           ${data.justification}
         </div>
       </details>
-      <button class="mcq-footer-btn" id="history-btn">History</button>
-      <div id="history-container"></div>
+      <details class="mcq-details" id="history-details">
+        <summary id="history-summary">History</summary>
+        <div id="history-container"></div>
+      </details>
       <a class="mcq-settings-link" id="settings-link">Settings</a>
     </div>
   `;
@@ -636,8 +638,8 @@ function showPopup(data, isStealth, isCached) {
     'position:fixed',
     'bottom:20px',
     'right:20px',
-    'width:48px',
-    'height:48px',
+    'width:38px',
+    'height:38px',
     'border-radius:50%',
     'cursor:grab',
     'z-index:2147483647',
@@ -648,7 +650,7 @@ function showPopup(data, isStealth, isCached) {
   const bubbleImg = document.createElement('img');
   bubbleImg.src = logoUrl;
   bubbleImg.draggable = false;
-  bubbleImg.style.cssText = 'width:48px; height:48px; border-radius:50%; display:block; pointer-events:none;';
+  bubbleImg.style.cssText = 'width:38px; height:38px; border-radius:50%; display:block; pointer-events:none;';
   bubble.appendChild(bubbleImg);
   document.body.appendChild(bubble);
 
@@ -747,14 +749,16 @@ function showPopup(data, isStealth, isCached) {
   });
 
   // History Logic
-  shadow.getElementById('history-btn').addEventListener('click', () => {
+  shadow.getElementById('history-summary').addEventListener('click', () => {
     if (!isContextValid()) return;
     const histContainer = shadow.getElementById('history-container');
-    if (histContainer.style.display === 'block') {
-      histContainer.style.display = 'none';
-    } else {
-      histContainer.style.display = 'block';
-      histContainer.innerHTML = '<div style="font-size:11px; text-align:center; padding:10px; color:#64748b;">Loading...</div>';
+    // We only need to load when it's about to open. 
+    // The <details> element handles the visual toggle, but we handle the data loading.
+    const details = shadow.getElementById('history-details');
+    if (details.open) return; // If already open, we don't need to reload on close click
+    
+    histContainer.style.display = 'block';
+    histContainer.innerHTML = '<div style="font-size:11px; text-align:center; padding:10px; color:#64748b;">Loading...</div>';
       try {
         chrome.storage.local.get({ history: [] }, (res) => {
           if (chrome.runtime.lastError) return;
