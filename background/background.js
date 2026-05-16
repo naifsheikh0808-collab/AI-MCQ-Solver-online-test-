@@ -11,6 +11,7 @@ console.log("MCQ Solver AI: Background service worker initialized.");
 
 // Handle icon activation and grayscale
 chrome.storage.local.get({ isActive: true }, (res) => {
+  if (chrome.runtime.lastError || !res) return;
   updateIcon(res.isActive);
 });
 
@@ -290,13 +291,22 @@ async function processWithFallback(payload) {
     throw new Error("🔑 API Key Missing!\n\nPlease open the extension Settings to set your free Gemini API key.");
   }
 
-  const prompt = `You are an expert educational AI. Solve the following multiple-choice question.
-Provide ONLY a valid JSON response in the exact format below, with no markdown, no extra text.
+  const prompt = `You are an expert MCQ solver AI with deep knowledge across all academic subjects.
+Your task: Analyze the question and all options carefully, then select the single BEST correct answer.
+
+Rules:
+- Read ALL options before deciding. Never pick an option just because it sounds plausible.
+- For numerical/formula questions: work out the calculation step-by-step before answering.
+- For conceptual questions: eliminate clearly wrong options first, then choose the best remaining one.
+- Your confidence must reflect how certain you actually are (100 = absolutely certain, 50 = best guess).
+- Provide ONLY a valid JSON response with NO markdown, NO extra text, NO explanation outside JSON.
+
+Required JSON format:
 {
   "correctOption": "A",
   "confidence": 90,
   "title": "5-word topic title of this question",
-  "justification": "Concise explanation in 50-80 words of why this option is correct."
+  "justification": "Concise explanation in 50-80 words of why this option is correct and why others are wrong."
 }`;
 
   let errors = [];
@@ -310,8 +320,8 @@ Provide ONLY a valid JSON response in the exact format below, with no markdown, 
       return res;
     } catch (e) {
       console.warn("Gemini 2.5 Flash failed:", e.message);
-      // Hard fail on API Key errors so user knows immediately
-      if (e.message.includes('403') || e.message.includes('400')) {
+      // Only hard-fail on explicit auth errors (403), not on 400 which can be transient
+      if (e.message.includes('403')) {
         throw new Error(e.message + " Please check your Gemini API key in Settings.");
       }
       errors.push("Gemini: " + e.message);
@@ -322,10 +332,21 @@ Provide ONLY a valid JSON response in the exact format below, with no markdown, 
   if (isGrokValid) {
     try {
       if (payload.type === 'image' || payload.type === 'multimodal') {
+        // For image questions: use Scout (only Groq vision model) but with llama-3.3-70b as text fallback
         console.log("Attempting Groq Llama-4 Scout (vision)...");
-        let res = await callOpenAICompatible(prompt, payload, 'meta-llama/llama-4-scout-17b-16e-instruct', actualGrokKey, 'https://api.groq.com/openai/v1/chat/completions');
-        res.modelUsed = "Llama 4 Scout 17B (Vision)";
-        return res;
+        try {
+          let res = await callOpenAICompatible(prompt, payload, 'meta-llama/llama-4-scout-17b-16e-instruct', actualGrokKey, 'https://api.groq.com/openai/v1/chat/completions');
+          res.modelUsed = "Llama 4 Scout (Vision)";
+          return res;
+        } catch (visionErr) {
+          console.warn("Scout vision failed, falling back to Llama-3.3-70B with text:", visionErr.message);
+          // Fall through to text-only path below using the extracted DOM text
+          if (!payload.text) throw visionErr; // no text to fall back to, re-throw
+          const textPayload = { type: 'text', text: payload.text, pageTitle: payload.pageTitle, pageUrl: payload.pageUrl };
+          let res = await callOpenAICompatible(prompt, textPayload, 'llama-3.3-70b-versatile', actualGrokKey, 'https://api.groq.com/openai/v1/chat/completions');
+          res.modelUsed = "Groq Llama-3.3-70B";
+          return res;
+        }
       } else {
         console.log("Attempting Groq Llama-3.3-70b...");
         let res = await callOpenAICompatible(prompt, payload, 'llama-3.3-70b-versatile', actualGrokKey, 'https://api.groq.com/openai/v1/chat/completions');
@@ -359,7 +380,7 @@ Provide ONLY a valid JSON response in the exact format below, with no markdown, 
 // Rate limiter: track last Gemini call to enforce minimum gap between requests
 // Free tier allows 5 RPM = 1 request per 12s to be safe
 let lastGeminiCallTime = 0;
-const GEMINI_MIN_GAP_MS = 13000; // 13 seconds = stay safely under 5 RPM
+const GEMINI_MIN_GAP_MS = 7000; // 7 seconds = safely under 10 RPM (gemini-2.5-flash free tier)
 
 async function callGemini(systemPrompt, payload, modelName = 'gemini-2.5-flash', apiKey) {
   if (!apiKey || apiKey.includes("YOUR_")) {
