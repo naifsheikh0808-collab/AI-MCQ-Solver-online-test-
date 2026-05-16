@@ -4,13 +4,39 @@ A clean, professional, stealthy, and highly educational Chrome Extension designe
 
 ## Features
 
-- **Intelligent Extraction**: Uses smart DOM parsing to find question text and options on common quiz platforms. Falls back to screenshot vision processing if text cannot be extracted.
-- **Online AI Fallback Engine**: Attempts to solve the question using a resilient fallback chain: `Gemini 1.5 Flash` > `Groq (xAI/Grok)` > `ChatGPT`.
-- **Educational Justifications**: Always provides a clear explanation of *why* an option is correct to aid in learning.
-- **Stealthy UI**: Injects a clean, draggable floating popup within a Shadow DOM so it cannot be affected by the host page's CSS. Includes a "Stealth Mode" option for a smaller, transparent footprint.
-- **Caching Mechanism**: Saves previous answers locally to prevent duplicate AI API calls and save money/time.
-- **Bring-Your-Own-Key (BYOK) Architecture**: Highly scalable setup where users provide their own free Gemini or Groq API keys in the extension settings. This ensures zero API costs for the developer, eliminates shared rate limit bottlenecks, and provides unthrottled fast performance for every student.
-- **Keyboard Shortcuts**: Quickly solve the MCQ on screen by pressing `Ctrl+Shift+Q` (or `Cmd+Shift+Q` on Mac).
+### 🤖 AI & Solving
+- **Multimodal AI Fallback Engine**: Solves questions using a resilient chain — `Gemini 2.5 Flash` → `Groq Llama 4 Scout (Vision)` → `Groq Llama 3.3 70B`. If one service is busy or down, it automatically tries the next.
+- **Multimodal Extraction**: Combines DOM text extraction + live screenshot for the most accurate context. Falls back to image-only or text-only if needed.
+- **Intelligent DOM Parsing**: Detects question text and answer options directly from the page structure (supports Google Forms, Canvas, Moodle, Sarthaks, Selfstudys, and more).
+- **Educational Justifications**: Every answer comes with a concise 50–80 word explanation of *why* the option is correct to support actual learning.
+- **Confidence Indicator**: Displays an AI confidence score (color-coded: 🟢 High / 🟡 Medium / 🔴 Low) so you know when to double-check manually.
+- **Auto-Solve on Page Load**: Optionally detects and solves a question automatically when you open a quiz page (can be turned off in Settings).
+
+### 🔄 Answer Management
+- **Recheck Button**: Re-queries the AI for the same question to get a second opinion or resolve a low-confidence answer.
+- **Check Current Question Button**: Triggers a fresh solve of whatever is currently visible on screen, without needing to close and reopen.
+- **Answer History**: Tracks the last 20 solved questions in the popup with timestamps, question titles, and answers. Includes a **Clear All** button to wipe history and reset the question counter.
+- **Question Numbering**: Assigns a sequential `Q1, Q2, Q3...` number to each unique question across a session for easy tracking.
+- **Smart Caching**: Saves AI answers locally per question to avoid duplicate API calls and save time/quota.
+
+### 🪟 Floating Popup UI
+- **Draggable Floating Popup**: The answer panel can be freely dragged anywhere on the screen and stays out of your way.
+- **Minimize to Bubble**: Click the `−` button to collapse the popup into a small floating logo bubble. Click the bubble to restore the full panel.
+- **Shadow DOM Isolation**: The popup is injected inside a Shadow DOM so the host page's CSS can never break or interfere with it.
+- **Stealth Mode**: Makes the popup smaller and semi-transparent so it blends in with the page. It fully appears on hover.
+
+### 🛡️ Anti-Cheat Bypass (Always Active when Extension is ON)
+- **Always Copy**: Re-enables right-click, copy, cut, and paste on pages that block them — so you can always copy question text, regardless of how strict the platform is.
+- **Always Active Tab**: Hides tab-switch and window-blur events from exam platforms. The page never "knows" you switched tabs or focused another window.
+- **Text Selection Unlocked**: Forces CSS `user-select` back to enabled on all elements, so you can highlight and select any text on the page.
+
+### ⚙️ Controls & Settings
+- **On/Off Toggle**: Instantly enables or disables the entire extension from the popup. When OFF — the AI solver, anti-cheat bypass, and auto-solve are all completely deactivated.
+- **Grayscale Icon**: The toolbar icon turns gray when the extension is disabled, giving a clear visual status at a glance.
+- **Bring-Your-Own-Key (BYOK)**: Users enter their own free Gemini and/or Groq API keys in the Settings page. This means zero API costs for the developer, no shared rate limits, and full speed for every user.
+- **Keyboard Shortcut**: Press `Ctrl+Shift+Q` (or `Cmd+Shift+Q` on Mac) from any quiz page to instantly trigger the solver.
+- **Right-Click Context Menu**: Right-click anywhere on a page and select **"Solve MCQ with AI"** as an alternative trigger.
+- **Settings Page**: Dedicated options page for managing API keys and extension behavior preferences.
 
 ## Setup & Configuration (Adding API Keys)
 
