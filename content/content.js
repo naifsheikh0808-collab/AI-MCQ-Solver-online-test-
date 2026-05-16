@@ -518,7 +518,6 @@ function showPopup(data, isStealth, isCached) {
       color: #3b82f6;
     }
     #history-container {
-      display: none;
       margin-top: 8px;
       max-height: 150px;
       overflow-y: auto;
