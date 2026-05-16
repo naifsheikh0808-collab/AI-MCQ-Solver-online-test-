@@ -31,10 +31,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Render History
+  // Render History — shows onboarding guide for first-time users
   function renderHistory(hist) {
     if (!hist || hist.length === 0) {
-      historyList.innerHTML = '<p class="empty-state">No recent questions.</p>';
+      historyList.innerHTML = `
+        <div class="onboarding">
+          <p class="onboarding-title">👋 Welcome! Get started in 4 steps:</p>
+          <div class="onboarding-step">
+            <span class="step-num">1</span>
+            <span>Make sure the <strong>toggle is ON</strong> (green) at the top.</span>
+          </div>
+          <div class="onboarding-step">
+            <span class="step-num">2</span>
+            <span>Click <strong>⚙️ Settings</strong> below and paste your free <strong>Gemini API key</strong>.</span>
+          </div>
+          <div class="onboarding-step">
+            <span class="step-num">3</span>
+            <span><strong>Refresh the exam page</strong> (press F5) after saving your key.</span>
+          </div>
+          <div class="onboarding-step">
+            <span class="step-num">4</span>
+            <span>Press <strong>Ctrl+Shift+Q</strong> on any MCQ page — enjoy! 🎉</span>
+          </div>
+          <p class="onboarding-note">This guide disappears after your first solved question.</p>
+        </div>
+      `;
       return;
     }
     historyList.innerHTML = hist.map(item => `
