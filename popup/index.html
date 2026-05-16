@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MCQ Solver AI</title>
   <link rel="stylesheet" href="popup.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -14,7 +14,7 @@
     <header>
       <h1>MCQ Solver AI</h1>
       <div class="toggle-container">
-        <label class="toggle-switch">
+        <label class="toggle-switch" title="Toggle Extension On/Off">
           <input type="checkbox" id="activationToggle" checked>
           <span class="slider"></span>
         </label>
@@ -38,7 +38,8 @@
     </main>
 
     <footer>
-      <button id="optionsBtn" class="link-btn">Settings</button>
+      <span class="footer-hint">🔑 Using BYOK mode</span>
+      <button id="optionsBtn" class="link-btn">⚙️ Settings</button>
     </footer>
   </div>
   <script src="popup.js"></script>

@@ -102,18 +102,20 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 // Handle Keyboard Shortcuts
 chrome.commands.onCommand.addListener((command) => {
   if (command === "solve_mcq") {
-    chrome.storage.local.get({ isActive: true }, (res) => {
-      if (!res.isActive) return;
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs.length === 0) return;
-        const tabId = tabs[0].id;
-
-        // Capture screenshot NOW while the user-gesture token is still valid
-        chrome.tabs.captureVisibleTab(null, { format: "jpeg", quality: 80 }, (dataUrl) => {
-          const screenshot = chrome.runtime.lastError ? null : dataUrl;
-          if (chrome.runtime.lastError) {
-            console.warn("Screenshot capture failed:", chrome.runtime.lastError.message);
-          }
+    // 1. Capture immediately to preserve user gesture token!
+    chrome.tabs.captureVisibleTab(null, { format: "jpeg", quality: 80 }, (dataUrl) => {
+      const screenshot = chrome.runtime.lastError ? null : dataUrl;
+      if (chrome.runtime.lastError) {
+        console.warn("Screenshot capture failed:", chrome.runtime.lastError.message);
+      }
+      
+      // 2. Now do async checks safely since screenshot is already captured
+      chrome.storage.local.get({ isActive: true }, (res) => {
+        if (!res.isActive) return;
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs.length === 0) return;
+          const tabId = tabs[0].id;
+          
           // Pass screenshot directly to content script
           chrome.tabs.sendMessage(tabId, { action: "TRIGGER_SOLVE", screenshot }, () => {
             if (chrome.runtime.lastError) {
@@ -274,6 +276,20 @@ function processAndSaveData(payload, data, cacheKey, callback) {
  * 3. ChatGPT
  */
 async function processWithFallback(payload) {
+  const syncStorage = await new Promise(resolve => {
+    chrome.storage.sync.get(['geminiApiKey', 'grokApiKey'], resolve);
+  });
+
+  const actualGeminiKey = syncStorage.geminiApiKey ? syncStorage.geminiApiKey.trim() : CONFIG.GEMINI_API_KEY;
+  const actualGrokKey = syncStorage.grokApiKey ? syncStorage.grokApiKey.trim() : CONFIG.GROK_API_KEY;
+
+  const isGeminiValid = actualGeminiKey && !actualGeminiKey.includes("YOUR_");
+  const isGrokValid = actualGrokKey && !actualGrokKey.includes("YOUR_");
+
+  if (!isGeminiValid && !isGrokValid) {
+    throw new Error("🔑 API Key Missing!\n\nPlease open the extension Settings to set your free Gemini API key.");
+  }
+
   const prompt = `You are an expert educational AI. Solve the following multiple-choice question.
 Provide ONLY a valid JSON response in the exact format below, with no markdown, no extra text.
 {
@@ -283,45 +299,57 @@ Provide ONLY a valid JSON response in the exact format below, with no markdown, 
   "justification": "Concise explanation in 50-80 words of why this option is correct."
 }`;
 
-  // Try Gemini 2.5 Flash first
-  try {
-    console.log("Attempting Gemini 2.5 Flash...");
-    let res = await callGemini(prompt, payload, 'gemini-2.5-flash');
-    res.modelUsed = "Gemini 2.5 Flash";
-    return res;
-  } catch (e) {
-    console.warn("Gemini 2.5 Flash failed, trying Groq...", e.message);
-  }
+  let errors = [];
 
-  // Try Groq with vision model if image is present, text model otherwise
-  try {
-    if (payload.type === 'image' || payload.type === 'multimodal') {
-      // Llama 4 Scout supports vision — can actually SEE the screenshot
-      console.log("Attempting Groq Llama-4-Scout (vision)...");
-      let res = await callOpenAICompatible(prompt, payload, 'meta-llama/llama-4-scout-17b-16e-instruct', CONFIG.GROK_API_KEY, 'https://api.groq.com/openai/v1/chat/completions');
-      res.modelUsed = "Llama 4 Scout (Vision)";
+  // Try Gemini 2.5 Flash first if valid
+  if (isGeminiValid) {
+    try {
+      console.log("Attempting Gemini 2.5 Flash...");
+      let res = await callGemini(prompt, payload, 'gemini-2.5-flash', actualGeminiKey);
+      res.modelUsed = "Gemini 2.5 Flash";
       return res;
-    } else {
-      // Text-only question — use strong 70B model
-      console.log("Attempting Groq Llama-3.3-70b...");
-      let res = await callOpenAICompatible(prompt, payload, 'llama-3.3-70b-versatile', CONFIG.GROK_API_KEY, 'https://api.groq.com/openai/v1/chat/completions');
-      res.modelUsed = "Groq Llama-3.3-70B";
-      return res;
+    } catch (e) {
+      console.warn("Gemini 2.5 Flash failed:", e.message);
+      // Hard fail on API Key errors so user knows immediately
+      if (e.message.includes('403') || e.message.includes('400')) {
+        throw new Error(e.message + " Please check your Gemini API key in Settings.");
+      }
+      errors.push("Gemini: " + e.message);
     }
-  } catch (e) {
-    console.warn("Groq failed.", e.message);
   }
 
-  // Final retry: Gemini 2.5 Flash only if Groq also failed
-  try {
-    console.log("Final retry: Gemini 2.5 Flash (after Groq failed)...");
-    let res = await callGemini(prompt, payload, 'gemini-2.5-flash');
-    res.modelUsed = "Gemini 2.5 Flash (retry)";
-    return res;
-  } catch (e) {
-    console.error("All AI fallbacks failed.", e.message);
-    throw new Error("All AI services are busy. Please wait a moment and try again.");
+  // Try Groq if valid
+  if (isGrokValid) {
+    try {
+      if (payload.type === 'image' || payload.type === 'multimodal') {
+        console.log("Attempting Groq Llama-4 Scout (vision)...");
+        let res = await callOpenAICompatible(prompt, payload, 'meta-llama/llama-4-scout-17b-16e-instruct', actualGrokKey, 'https://api.groq.com/openai/v1/chat/completions');
+        res.modelUsed = "Llama 4 Scout 17B (Vision)";
+        return res;
+      } else {
+        console.log("Attempting Groq Llama-3.3-70b...");
+        let res = await callOpenAICompatible(prompt, payload, 'llama-3.3-70b-versatile', actualGrokKey, 'https://api.groq.com/openai/v1/chat/completions');
+        res.modelUsed = "Groq Llama-3.3-70B";
+        return res;
+      }
+    } catch (e) {
+      console.warn("Groq failed:", e.message);
+      // Hard fail on API Key errors so user knows immediately
+      if (e.message.includes('401') || e.message.includes('403')) {
+        throw new Error(e.message + " Please check your Groq API key in Settings.");
+      }
+      errors.push("Groq: " + e.message);
+    }
   }
+
+  // If we reach here, all fallbacks failed with non-hard errors (like 429, 503, timeouts)
+  console.error("All AI fallbacks failed.", errors);
+  
+  if (errors.some(msg => msg.includes('429'))) {
+    throw new Error("API Rate Limit Reached! Free tier allows 15 requests per minute. Please wait 60 seconds and try again.");
+  }
+
+  throw new Error("All AI services are busy or unreachable. Please try again later.\nErrors: " + errors.join(" | "));
 }
 
 // ------------------------------------------------------------------
@@ -333,9 +361,9 @@ Provide ONLY a valid JSON response in the exact format below, with no markdown, 
 let lastGeminiCallTime = 0;
 const GEMINI_MIN_GAP_MS = 13000; // 13 seconds = stay safely under 5 RPM
 
-async function callGemini(systemPrompt, payload, modelName = 'gemini-2.5-flash') {
-  if (!CONFIG.GEMINI_API_KEY || CONFIG.GEMINI_API_KEY.includes("YOUR_")) {
-    throw new Error("Gemini API key missing");
+async function callGemini(systemPrompt, payload, modelName = 'gemini-2.5-flash', apiKey) {
+  if (!apiKey || apiKey.includes("YOUR_")) {
+    throw new Error("Gemini API key missing or invalid");
   }
 
   // Enforce minimum gap between Gemini calls to respect 5 RPM rate limit
@@ -348,7 +376,7 @@ async function callGemini(systemPrompt, payload, modelName = 'gemini-2.5-flash')
   }
   lastGeminiCallTime = Date.now();
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${CONFIG.GEMINI_API_KEY}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
   let parts = [];
   if (payload.type === "text") {
@@ -377,7 +405,7 @@ async function callGemini(systemPrompt, payload, modelName = 'gemini-2.5-flash')
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
-  }, 15000);
+  }, 25000);
 
   if (!response.ok) {
     const errText = await response.text();
@@ -393,6 +421,9 @@ async function callGemini(systemPrompt, payload, modelName = 'gemini-2.5-flash')
       throw new Error(`Gemini rate limited (429). Falling back to Groq.`);
     }
     console.warn("Gemini API Error:", response.status);
+    if (response.status === 400 || response.status === 403) {
+      throw new Error(`Invalid Gemini API Key or Region blocked (HTTP ${response.status}).`);
+    }
     throw new Error(`Gemini HTTP Error: ${response.status}`);
   }
   const data = await response.json();
@@ -415,7 +446,6 @@ async function callOpenAICompatible(systemPrompt, payload, modelName, apiKey, en
     content.push({ type: "image_url", image_url: { url: payload.image } });
     content.push({ type: "text", text: "Solve the MCQ shown in this image." });
   } else if (payload.type === "multimodal") {
-    const isGroqVision = modelName === 'llama-3.2-11b-vision-preview';
     content.push({ type: "image_url", image_url: { url: payload.image } });
     const textContext = payload.text
       ? `Question Context:\n${payload.text}\n\nUse both the image and text context to determine the correct answer.`
@@ -444,6 +474,9 @@ async function callOpenAICompatible(systemPrompt, payload, modelName, apiKey, en
   if (!response.ok) {
     const errText = await response.text();
     console.error("OpenAI/Groq API Error:", errText);
+    if (response.status === 401 || response.status === 403) {
+      throw new Error(`Invalid Groq API Key (HTTP ${response.status}).`);
+    }
     throw new Error(`HTTP Error: ${response.status} - ${errText}`);
   }
   const data = await response.json();

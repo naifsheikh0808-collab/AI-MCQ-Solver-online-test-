@@ -9,24 +9,33 @@ A clean, professional, stealthy, and highly educational Chrome Extension designe
 - **Educational Justifications**: Always provides a clear explanation of *why* an option is correct to aid in learning.
 - **Stealthy UI**: Injects a clean, draggable floating popup within a Shadow DOM so it cannot be affected by the host page's CSS. Includes a "Stealth Mode" option for a smaller, transparent footprint.
 - **Caching Mechanism**: Saves previous answers locally to prevent duplicate AI API calls and save money/time.
-- **Zero User Setup**: Students do not need to configure API keys. The keys are managed by the developer securely (see Developer Setup).
+- **Bring-Your-Own-Key (BYOK) Architecture**: Highly scalable setup where users provide their own free Gemini or Groq API keys in the extension settings. This ensures zero API costs for the developer, eliminates shared rate limit bottlenecks, and provides unthrottled fast performance for every student.
 - **Keyboard Shortcuts**: Quickly solve the MCQ on screen by pressing `Ctrl+Shift+Q` (or `Cmd+Shift+Q` on Mac).
 
-## Developer Setup (Adding API Keys)
+## Setup & Configuration (Adding API Keys)
 
-This extension uses a fallback chain of AI models. To keep the project secure and prevent API key leaks, keys are stored in a local file that is ignored by Git.
+To bypass global rate limits and support unlimited students, the extension uses a Bring-Your-Own-Key (BYOK) approach:
 
-1.  Navigate to the `background/` folder.
-2.  Find the file named `config.sample.js`.
-3.  **Rename** it to `config.js`.
-4.  Open `config.js` and insert your API keys:
-    ```javascript
-    const API_KEYS = {
-      GEMINI_API_KEY: "AIza...", // Your Gemini API Key
-      GROK_API_KEY: "gsk_..."    // Your Groq API Key
-    };
-    ```
-5.  Save the file. The extension will now automatically use these keys.
+### Student Setup (How to add your API Key)
+To use this extension, you need a free API key from Google Gemini. Follow these exact steps:
+
+1. **Get your free Gemini API Key:**
+   - Go to [Google AI Studio](https://aistudio.google.com/app/apikey).
+   - Sign in with your Google Account.
+   - Click the **"Create API key"** button.
+   - Copy the generated API key (it starts with `AIza...`).
+2. **Add the key to the extension:**
+   - Click the **MCQ Solver AI** extension icon in your Chrome toolbar.
+   - Click the **⚙️ Settings** button at the bottom of the popup.
+   - Paste your copied key into the **Google Gemini API Key** field.
+   - Click **Save Settings**.
+   - *Note: Your key is stored securely in your own browser's synced storage.*
+
+### Developer Fallback Setup (Optional for testing)
+If you wish to bundle a default fallback key for local testing, keys are prioritized from a local file ignored by Git:
+1. Navigate to the `background/` folder.
+2. Rename `config.sample.js` to `config.js`.
+3. Insert your API keys inside `config.js`.
 
 ## Installation (Unpacked for Chrome)
 

@@ -5,25 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MCQ Solver AI - Options</title>
   <link rel="stylesheet" href="options.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
     <header>
       <h1>Settings</h1>
+      <span class="badge">v2.0 BYOK</span>
     </header>
     
     <main>
       <section class="settings-group">
-        <h2>AI Engine Configuration</h2>
-        <p class="description">Select your preferred AI behavior.</p>
+        <h2>🔑 API Keys Configuration</h2>
+        <p class="description">Bring your own API key to bypass shared rate limits and use the extension with zero restrictions.</p>
+        
+        <div class="input-group">
+          <label class="input-label" for="geminiApiKey">Google Gemini API Key (Primary)</label>
+          <div class="input-wrapper">
+            <input type="password" id="geminiApiKey" class="api-key-input" placeholder="AIzaSy...">
+          </div>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="api-link">Get your free Gemini API key →</a>
+        </div>
+
+        <div class="input-group" style="margin-top: 24px;">
+          <label class="input-label" for="grokApiKey">Groq API Key (Fast Vision/Text Fallback)</label>
+          <div class="input-wrapper">
+            <input type="password" id="grokApiKey" class="api-key-input" placeholder="gsk_...">
+          </div>
+          <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" class="api-link">Get your free Groq API key →</a>
+        </div>
+      </section>
+
+      <section class="settings-group">
+        <h2>⚙️ Extension Behavior</h2>
+        <p class="description">Customize how the AI solver interacts with test pages.</p>
         
         <div class="setting-item">
           <label>
             <input type="checkbox" id="stealthMode">
             Enable Stealth Mode
           </label>
-          <p class="help-text">Makes the popup smaller and harder to notice.</p>
+          <p class="help-text">Makes the popup smaller, semi-transparent, and harder to notice.</p>
         </div>
         
         <div class="setting-item">
@@ -31,14 +53,14 @@
             <input type="checkbox" id="autoSolve">
             Auto-Detect & Solve
           </label>
-          <p class="help-text">Automatically process questions when detected on the page.</p>
+          <p class="help-text">Automatically extract and process questions when detected on the page.</p>
         </div>
       </section>
       
       <div class="actions">
         <button id="saveBtn" class="primary-btn">Save Settings</button>
+        <div id="statusMessage" class="status-msg hidden">✨ Settings saved successfully!</div>
       </div>
-      <div id="statusMessage" class="status-msg hidden">Saved successfully!</div>
     </main>
   </div>
   <script src="options.js"></script>

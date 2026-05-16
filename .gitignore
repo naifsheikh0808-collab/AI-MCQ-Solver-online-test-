@@ -4,3 +4,6 @@ background/config.js
 # OS files
 .DS_Store
 Thumbs.db
+
+# Test scripts
+*.ps1
