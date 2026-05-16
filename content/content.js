@@ -5,10 +5,15 @@ console.log("MCQ Solver AI: Content script loaded.");
 // Listener for messages from background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "TRIGGER_SOLVE") {
-    console.log("Trigger received. Starting extraction...");
-    // Background captures screenshot immediately on shortcut press (while activeTab token is valid)
-    // and passes it here directly to avoid the round-trip expiry issue
-    extractAndSolve(false, false, request.screenshot || null);
+    // Guard: do nothing if extension is disabled
+    chrome.storage.local.get({ isActive: true }, (res) => {
+      if (!res.isActive) {
+        console.log("MCQ Solver AI: Extension is OFF. Ignoring trigger.");
+        return;
+      }
+      console.log("Trigger received. Starting extraction...");
+      extractAndSolve(false, false, request.screenshot || null);
+    });
   }
 });
 
@@ -33,19 +38,25 @@ function isContextValid() {
   return false;
 }
 
-// Immediately run bypass protections
-enableAntiCheatBypass();
+// Only activate bypass and auto-solve if extension is ON
+chrome.storage.local.get({ isActive: true }, (localRes) => {
+  if (localRes.isActive) {
+    enableAntiCheatBypass();
 
-// Load settings and initialize auto-solve if enabled
-chrome.storage.sync.get({ disclaimerShown: false, stealthMode: true, autoSolve: true }, (syncStorage) => {
-  if (syncStorage.autoSolve) {
-    setTimeout(() => {
-      // Only auto-solve if a question is actually found in the DOM to avoid spamming alerts
-      if (parseDOMForMCQ()) {
-        console.log("Auto-Detect & Solve triggered.");
-        extractAndSolve(false, true); // true for silent fallback
+    // Load settings and initialize auto-solve if enabled
+    chrome.storage.sync.get({ disclaimerShown: false, stealthMode: true, autoSolve: true }, (syncStorage) => {
+      if (syncStorage.autoSolve) {
+        setTimeout(() => {
+          // Only auto-solve if a question is actually found in the DOM to avoid spamming alerts
+          if (parseDOMForMCQ()) {
+            console.log("Auto-Detect & Solve triggered.");
+            extractAndSolve(false, true); // true for silent fallback
+          }
+        }, 1500); // Small delay to let page fully load
       }
-    }, 1500); // Small delay to let page fully load
+    });
+  } else {
+    console.log("MCQ Solver AI: Extension is OFF. Bypass and auto-solve are disabled.");
   }
 });
 
