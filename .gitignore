@@ -7,3 +7,6 @@ Thumbs.db
 
 # Test scripts
 *.ps1
+
+# Local documentation
+Project Architecture How it works.md
