@@ -748,33 +748,27 @@ function showPopup(data, isStealth, isCached) {
     extractAndSolve(false); // fresh extraction, no forceRecheck
   });
 
-  // History Logic
+  // History Logic — load data when <details> is expanded
   shadow.getElementById('history-summary').addEventListener('click', () => {
     if (!isContextValid()) return;
-    const histContainer = shadow.getElementById('history-container');
-    // We only need to load when it's about to open. 
-    // The <details> element handles the visual toggle, but we handle the data loading.
     const details = shadow.getElementById('history-details');
-    if (details.open) return; // If already open, we don't need to reload on close click
-    
-    histContainer.style.display = 'block';
+    if (details.open) return; // already open, user is closing it — nothing to do
+    const histContainer = shadow.getElementById('history-container');
     histContainer.innerHTML = '<div style="font-size:11px; text-align:center; padding:10px; color:#64748b;">Loading...</div>';
-      try {
-        chrome.storage.local.get({ history: [] }, (res) => {
-          if (chrome.runtime.lastError) return;
-          const hist = res.history;
+    try {
+      chrome.storage.local.get({ history: [] }, (res) => {
+        if (chrome.runtime.lastError) return;
+        const hist = res.history;
         if (hist.length === 0) {
           histContainer.innerHTML = '<div style="font-size:11px; text-align:center; padding:10px; color:#64748b;">No history yet.</div>';
           return;
         }
-        
         let headerHtml = `
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px; border-bottom: 1px solid #e2e8f0; margin-bottom: 4px;">
             <span style="font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase;">Recent</span>
             <a id="clear-history-link" style="font-size: 10px; color: #ef4444; cursor: pointer; text-decoration: underline;">Clear All</a>
           </div>
         `;
-        
         let listHtml = hist.slice(0, 5).map(item => `
           <div style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 11px;">
             <div style="color: #64748b; margin-bottom: 2px;">${new Date(item.time).toLocaleTimeString()}</div>
@@ -782,9 +776,7 @@ function showPopup(data, isStealth, isCached) {
             <div style="color: #22c55e; font-weight: bold;">Option ${item.answer}</div>
           </div>
         `).join('');
-        
         histContainer.innerHTML = headerHtml + listHtml;
-        
         const clearLink = shadow.getElementById('clear-history-link');
         if (clearLink) {
           clearLink.addEventListener('click', () => {
@@ -797,8 +789,7 @@ function showPopup(data, isStealth, isCached) {
     } catch (e) {
       histContainer.innerHTML = '<div style="font-size:11px; text-align:center; padding:10px; color:#ef4444;">Error loading history.</div>';
     }
-  }
-});
+  });
 
   // Settings Logic
   shadow.getElementById('settings-link').addEventListener('click', () => {
