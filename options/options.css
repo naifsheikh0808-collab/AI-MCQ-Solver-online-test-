@@ -235,3 +235,40 @@ h2 {
   border-radius: 20px;
   border: 1px solid #bfdbfe;
 }
+
+.options-footer {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.feedback-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 22px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+  color: #059669;
+  border: 1.5px solid #a7f3d0;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  font-family: 'Inter', system-ui, sans-serif;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.1);
+}
+
+.feedback-btn:hover {
+  background: linear-gradient(135deg, #d1fae5 0%, #dcfce7 100%);
+  border-color: #6ee7b7;
+  color: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+}
+
+.feedback-btn:active {
+  transform: translateY(0);
+}
+
