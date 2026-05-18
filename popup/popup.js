@@ -78,15 +78,47 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   solveBtn.addEventListener('click', () => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, { action: "TRIGGER_SOLVE" }, () => {
-          if (chrome.runtime.lastError) {
-            console.warn("Content script not loaded on this page.");
-          }
+    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+      if (!tabs[0]) return;
+      const tabId = tabs[0].id;
+
+      // Helper: send a message and return a promise that resolves on success or rejects on error
+      function trySendMessage() {
+        return new Promise((resolve, reject) => {
+          chrome.tabs.sendMessage(tabId, { action: "TRIGGER_SOLVE" }, (response) => {
+            if (chrome.runtime.lastError) {
+              reject(chrome.runtime.lastError);
+            } else {
+              resolve(response);
+            }
+          });
         });
-        window.close(); // Close popup after triggering
       }
+
+      try {
+        // First attempt — works if content script is already alive
+        await trySendMessage();
+      } catch (e) {
+        // Content script not loaded (cold start / service worker died). Inject it now.
+        console.warn("Content script not found. Injecting now...", e.message);
+        try {
+          await chrome.scripting.executeScript({
+            target: { tabId: tabId },
+            files: ['content/content.js']
+          });
+          // Small delay to let the script initialize before messaging
+          await new Promise(r => setTimeout(r, 300));
+          // Second attempt after injection
+          await trySendMessage();
+        } catch (injectErr) {
+          console.error("Could not inject content script:", injectErr.message);
+          // Page is likely a chrome:// or other restricted URL — show a user-friendly message
+          alert("⚠️ This page cannot be accessed by the extension.\nPlease navigate to your exam page and try again.");
+          return; // Do NOT close popup so user sees the alert
+        }
+      }
+
+      window.close(); // Close popup only after successfully triggering
     });
   });
 
