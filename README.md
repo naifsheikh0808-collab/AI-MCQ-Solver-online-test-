@@ -1,6 +1,6 @@
-# MCQ Solver AI - Chrome Extension
+# MCQ Solver AI - Browser Extension (Chrome & Edge)
 
-A clean, professional, stealthy, and highly educational Chrome Extension designed to help students solve online MCQs. It automatically reads questions from the screen, processes them using state-of-the-art AI (Gemini Flash, Groq, ChatGPT), and displays the answer with a clear, educational justification in a camouflaged floating popup.
+A clean, professional, stealthy, and highly educational Browser Extension (fully compatible with Google Chrome and Microsoft Edge) designed to help students solve online MCQs. It automatically reads questions from the screen, processes them using state-of-the-art AI (Gemini Flash, Groq, ChatGPT), and displays the answer with a clear, educational justification in a camouflaged floating popup.
 
 ## Features
 
@@ -10,7 +10,7 @@ A clean, professional, stealthy, and highly educational Chrome Extension designe
 - **Intelligent DOM Parsing**: Detects question text and answer options directly from the page structure (supports Google Forms, Canvas, Moodle, Sarthaks, Selfstudys, and more).
 - **Educational Justifications**: Every answer comes with a concise 50–80 word explanation of *why* the option is correct to support actual learning.
 - **Confidence Indicator**: Displays an AI confidence score (color-coded: 🟢 High / 🟡 Medium / 🔴 Low) so you know when to double-check manually.
-- **Auto-Solve on Page Load**: Optionally detects and solves a question automatically when you open a quiz page (can be turned off in Settings).
+- **Auto-Solve on Page Load**: Optionally detects and solves a question automatically when you open a quiz page (disabled by default, can be turned on in Settings).
 
 ### 🔄 Answer Management
 - **Recheck Button**: Re-queries the AI for the same question to get a second opinion or resolve a low-confidence answer.
@@ -63,19 +63,29 @@ If you wish to bundle a default fallback key for local testing, keys are priorit
 2. Rename `config.sample.js` to `config.js`.
 3. Insert your API keys inside `config.js`.
 
-## Installation (Unpacked for Chrome)
+## Installation
 
+### For Google Chrome (Unpacked)
 1. Open Google Chrome and navigate to `chrome://extensions/`.
 2. Turn on **"Developer mode"** using the toggle switch in the top right corner.
 3. Click the **"Load unpacked"** button in the top left.
-4. Select the folder containing this extension (`chrome extension` folder).
+4. Select the `chrome extension` folder.
 5. The **MCQ Solver AI** extension will now appear in your list of extensions. Pin it to your toolbar for easy access!
+
+### For Microsoft Edge (Unpacked)
+1. Open Microsoft Edge and navigate to `edge://extensions/`.
+2. Turn on the **"Developer mode"** toggle switch on the bottom left corner.
+3. Click the **"Load unpacked"** button in the top right / main screen.
+4. Select the `edge extension` folder.
+5. Pin the extension to your toolbar.
+
+*Note: For the official Microsoft Edge store version, you can zip the contents of the `edge extension` folder and submit it to the Microsoft Partner Center.*
 
 ## How to Use
 
 1. Navigate to a page containing a Multiple Choice Question (e.g., Google Forms, Canvas, Moodle).
 2. You can trigger the AI solver in three ways:
-   - Click the **Extension Icon** in the toolbar and click "Solve MCQ on Page".
+   - Click the **Extension Icon** in the toolbar and click **"Press here to solve"**.
    - Press the keyboard shortcut: **`Ctrl+Shift+Q`**.
    - Right-click anywhere on the page and select **"Solve MCQ with AI"**.
 3. *If the DOM extraction fails*, you can highlight the text of the question with your mouse and trigger the solver again.
