@@ -22,14 +22,20 @@
     </header>
 
     <main>
-      <div class="actions">
-        <button id="solveBtn" class="primary-btn">Press Ctrl + Shift + Q to solve</button>
+      <div class="actions" style="margin-bottom: 20px;">
+        <button id="solveBtn" class="primary-btn">Press here to solve</button>
+        <div style="text-align: center; font-size: 11px; color: #475569; margin-top: 8px; font-weight: 500;">
+          Press shortcut <kbd style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 5px; font-family: inherit; font-size: 10px; box-shadow: 0 1px 1px rgba(0,0,0,0.08); color: #1e293b; font-weight: 700;">Ctrl + Shift + Q</kbd> to solve
+        </div>
       </div>
 
       <div class="history-section">
-        <div class="history-header">
+        <div class="history-header" style="margin-bottom: 4px;">
           <h3>Recent History</h3>
           <button id="clearHistoryBtn" class="clear-btn">Clear All</button>
+        </div>
+        <div style="font-size: 10.5px; color: #ef4444; margin: 0 0 8px 0; font-weight: 600; text-align: center;">
+          Note: Questions are numbered according to your solving sequence, not the actual exam sequence.
         </div>
         <div id="historyList" class="history-list">
           <p class="empty-state">No recent questions.</p>

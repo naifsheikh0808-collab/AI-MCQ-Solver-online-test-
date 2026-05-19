@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isActive) {
       solveBtn.style.backgroundColor = '';
       solveBtn.style.cursor = '';
-      solveBtn.textContent = 'Press Ctrl + Shift + Q to solve';
+      solveBtn.textContent = 'Press here to solve';
     } else {
       solveBtn.style.backgroundColor = '#94a3b8';
       solveBtn.style.cursor = 'not-allowed';

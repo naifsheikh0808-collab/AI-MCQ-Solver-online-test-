@@ -1,5 +1,7 @@
 // Content Script for MCQ Solver AI
 
+if (typeof window.mcqSolverInitialized === 'undefined') {
+window.mcqSolverInitialized = true;
 console.log("MCQ Solver AI: Content script loaded.");
 
 // Listener for messages from background script
@@ -9,11 +11,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     chrome.storage.local.get({ isActive: true }, (res) => {
       if (!res.isActive) {
         console.log("MCQ Solver AI: Extension is OFF. Ignoring trigger.");
+        sendResponse({ success: false });
         return;
       }
       console.log("Trigger received. Starting extraction...");
       extractAndSolve(false, false, request.screenshot || null);
+      sendResponse({ success: true });
     });
+    return true; // Keep the messaging channel open for async response
   }
 });
 
@@ -44,7 +49,7 @@ chrome.storage.local.get({ isActive: true }, (localRes) => {
     enableAntiCheatBypass();
 
     // Load settings and initialize auto-solve if enabled
-    chrome.storage.sync.get({ disclaimerShown: false, stealthMode: true, autoSolve: true }, (syncStorage) => {
+    chrome.storage.sync.get({ disclaimerShown: false, stealthMode: true, autoSolve: false }, (syncStorage) => {
       if (syncStorage.autoSolve) {
         setTimeout(() => {
           // Only auto-solve if a question is actually found in the DOM to avoid spamming alerts
@@ -60,7 +65,7 @@ chrome.storage.local.get({ isActive: true }, (localRes) => {
   }
 });
 
-let lastPayload = null;
+var lastPayload = null;
 
 // Main function to extract question and call background for processing
 // providedScreenshot: base64 dataUrl passed directly from background (captured at shortcut time)
@@ -68,7 +73,7 @@ async function extractAndSolve(forceRecheck = false, silentIfFail = false, provi
   if (!isContextValid()) return;
 
   // Educational Disclaimer
-  const syncStorage = await new Promise(resolve => chrome.storage.sync.get({ disclaimerShown: false, stealthMode: true, autoSolve: true }, resolve));
+  const syncStorage = await new Promise(resolve => chrome.storage.sync.get({ disclaimerShown: false, stealthMode: true, autoSolve: false }, resolve));
   if (!syncStorage.disclaimerShown) {
     const agreed = confirm("MCQ Solver AI - Educational Disclaimer\\n\\nThis tool is designed to assist your learning by providing explanations for MCQs. It should NOT be used for cheating.\\n\\nDo you agree to use this responsibly?");
     if (!agreed) return;
@@ -360,7 +365,7 @@ function showPopup(data, isStealth, isCached) {
     .mcq-popup {
       font-family: 'Inter', system-ui, sans-serif;
       width: ${isStealth ? '240px' : '320px'};
-      background: ${isStealth ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.95)'};
+      background: ${isStealth ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.95)'};
       backdrop-filter: blur(10px);
       border-radius: 12px;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
@@ -368,7 +373,7 @@ function showPopup(data, isStealth, isCached) {
       overflow: hidden;
       color: #1e293b;
       transition: opacity 0.3s ease;
-      opacity: ${isStealth ? '0.6' : '1'};
+      opacity: ${isStealth ? '0.35' : '1'};
     }
     .mcq-popup:hover {
       opacity: 1;
@@ -775,7 +780,15 @@ function showPopup(data, isStealth, isCached) {
             <div style="color: #22c55e; font-weight: bold;">Option ${item.answer}</div>
           </div>
         `).join('');
-        histContainer.innerHTML = headerHtml + listHtml;
+        let footerHtml = '';
+        if (hist.length > 5) {
+          footerHtml = `
+            <div style="font-size: 10px; text-align: center; color: #475569; padding: 6px 0 2px 0; font-weight: 600; font-style: italic;">
+              Complete history is in the main popup
+            </div>
+          `;
+        }
+        histContainer.innerHTML = headerHtml + listHtml + footerHtml;
         const clearLink = shadow.getElementById('clear-history-link');
         if (clearLink) {
           clearLink.addEventListener('click', () => {
@@ -795,3 +808,5 @@ function showPopup(data, isStealth, isCached) {
     chrome.runtime.sendMessage({ action: "OPEN_OPTIONS" });
   });
 }
+
+} // End of initialization guard

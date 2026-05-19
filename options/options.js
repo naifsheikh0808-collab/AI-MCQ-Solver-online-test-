@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (items.geminiApiKey) geminiApiKeyEl.value = items.geminiApiKey;
     if (items.grokApiKey) grokApiKeyEl.value = items.grokApiKey;
     stealthModeEl.checked = items.stealthMode !== false; // Default true
-    autoSolveEl.checked = items.autoSolve !== false; // Default true
+    autoSolveEl.checked = items.autoSolve === true; // Default false
   });
 
   // Save settings
