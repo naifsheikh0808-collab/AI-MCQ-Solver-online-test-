@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "MCQ Solver AI",
   "version": "1.0.0",
+  "author": "SK Naif Alam",
   "description": "Intelligent, stealthy, and educational assistant for answering online MCQs with clear explanations.",
   "permissions": [
     "activeTab",

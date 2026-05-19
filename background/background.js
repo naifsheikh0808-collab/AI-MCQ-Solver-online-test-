@@ -7,7 +7,11 @@ try {
   console.warn("Local config.js not found. Using internal placeholders.");
 }
 
-console.log("MCQ Solver AI: Background service worker initialized.");
+console.log(
+  "%c🚀 MCQ Solver AI%c - Engineered by SK Naif Alam\nGitHub: https://github.com/naifsheikh0808-collab",
+  "color: #3b82f6; font-weight: bold; font-size: 14px;",
+  "color: #64748b; font-size: 12px;"
+);
 
 // Handle icon activation and grayscale
 chrome.storage.local.get({ isActive: true }, (res) => {
