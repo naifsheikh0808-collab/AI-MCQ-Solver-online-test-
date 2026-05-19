@@ -272,3 +272,20 @@ h2 {
   transform: translateY(0);
 }
 
+.social-link {
+  color: #64748b;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  transition: color 0.2s;
+}
+
+.social-github:hover {
+  color: #0f172a !important;
+}
+
+.social-instagram:hover {
+  color: #e1306c !important;
+}
