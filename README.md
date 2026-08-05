@@ -2,7 +2,20 @@
 
 A clean, professional, stealthy, and highly educational Browser Extension (fully compatible with Google Chrome and Microsoft Edge) designed to help students solve online MCQs. It automatically reads questions from the screen, processes them using state-of-the-art AI (Gemini Flash, Groq, ChatGPT), and displays the answer with a clear, educational justification in a camouflaged floating popup.
 
-## Features
+## 🌟 Special Thanks & Credits
+
+Special thanks to **Mohana Dhar Chowdhury** for her key design, feature, and stealth concept contributions that shaped this extension:
+
+- 🥷 **Stealth Mode Idea**: Concept for blending the popup into pages with low opacity and floating controls.
+- 🎨 **UI/UX Design**: Clean visual layout, shadow DOM floating card, and interactive mini-bubble.
+- 📊 **Confidence Indicator**: Color-coded reliability meter (`🟢 High` / `🟡 Medium` / `🔴 Low`) for AI answers.
+- 💡 **"Why This Option?" Feature**: Concept for providing step-by-step educational justifications for every MCQ.
+
+🔗 **Connect with Mohana:**
+- **GitHub:** [Mohana1008](https://github.com/Mohana1008)
+- **LinkedIn:** [Mohana Dhar Chowdhury](https://www.linkedin.com/in/mohana-dhar-chowdhury-bb011b38b/)
+
+---
 
 ### 🤖 AI & Solving
 - **Multimodal AI Fallback Engine**: Solves questions using a resilient chain — `Gemini 2.5 Flash` → `Groq Llama 4 Scout (Vision)` → `Groq Llama 3.3 70B`. If one service is busy or down, it automatically tries the next.
