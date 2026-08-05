@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MAKAUT - Mock Online Exam Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal:         #008080;
+      --teal-dark:    #006666;
+      --sidebar-bg:   #007b7b;
+      --sidebar-w:    130px;
+      --header-h:     44px;
+      --warn-red:     #c62828;
+      --warn-bg:      #fff5f5;
+      --green:        #43a047;
+      --orange:       #fb8c00;
+      --grey:         #d5d5d5;
+    }
+
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: #eceff1;
+      min-height: 100vh;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow: hidden;
+    }
+
+    /* ── TOP BAR ────────────────────────────────────── */
+    .top-bar {
+      background: var(--teal);
+      color: #fff;
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      position: sticky; top: 0; z-index: 90;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .logo { font-weight: 700; font-size: 14px; letter-spacing: 0.3px; }
+    .top-chips { display: flex; gap: 10px; align-items: center; }
+    .chip {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 20px;
+      padding: 3px 11px;
+      font-size: 12px; font-weight: 600;
+    }
+    .chip .dot { width: 9px; height: 9px; border-radius: 50%; }
+    .chip.v .dot  { background: #69f0ae; }
+    .chip.nv .dot { background: #bdbdbd; }
+    .chip.r .dot  { background: #ffb74d; }
+    .chip.t { font-size: 13px; background: rgba(255,255,255,0.25); }
+    .chip.t.blink { background: rgba(220,50,50,0.55); animation: blink 0.8s infinite; }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.5;} }
+
+    /* ── LAYOUT ─────────────────────────────────────── */
+    .layout {
+      display: flex;
+      height: calc(100vh - var(--header-h));
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ─────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--sidebar-bg);
+      display: flex; flex-direction: column;
+      overflow-y: auto; flex-shrink: 0;
+    }
+    .sb-title {
+      color: #fff; font-size: 11px; font-weight: 700;
+      text-align: center; padding: 10px 6px 7px;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      line-height: 1.4; letter-spacing: 0.3px;
+    }
+    .q-grid {
+      display: grid; grid-template-columns: repeat(5,1fr);
+      gap: 5px; padding: 10px 7px;
+    }
+    .qb {
+      border: none; border-radius: 4px;
+      aspect-ratio: 1; font-size: 11px; font-weight: 700;
+      cursor: pointer; background: var(--grey); color: #444;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .12s, box-shadow .12s;
+      position: relative;
+    }
+    .qb:hover { transform: scale(1.12); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+    .qb.cur { outline: 3px solid #fff; outline-offset: 1px; }
+    .qb.ans { background: var(--green); color: #fff; }
+    .qb.mkd { background: var(--orange); color: #fff; }
+    .qb.mkd::after {
+      content: ''; position: absolute; top: 2px; right: 2px;
+      width: 5px; height: 5px; border-radius: 50%; background: #fff;
+    }
+    .sb-break {
+      margin-top: auto; padding: 12px 10px 14px;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,.8); font-size: 11px;
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
+      transition: color .2s;
+    }
+    .sb-break:hover { color: #fff; }
+
+    /* ── CONTENT ─────────────────────────────────────── */
+    .content {
+      flex: 1; display: flex; flex-direction: column;
+      overflow-y: auto; background: #fff;
+    }
+
+    /* WARNING BANNER */
+    .warn-banner {
+      display: none; align-items: center; gap: 10px;
+      background: #fff3f3; border-bottom: 1.5px solid #ef9a9a;
+      padding: 10px 18px; color: var(--warn-red);
+      font-size: 13px; font-weight: 600;
+      animation: slidein .3s ease;
+    }
+    .warn-banner.show { display: flex; }
+    @keyframes slidein { from{transform:translateY(-6px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .warn-icon { font-size: 18px; flex-shrink: 0; }
+    .warn-close {
+      margin-left: auto; background: none; border: none;
+      color: var(--warn-red); font-size: 20px; cursor: pointer; line-height: 1;
+    }
+
+    /* SCREEN LABEL */
+    .screen-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 20px; border-bottom: 1px solid #e8ecef;
+      background: #fafafa;
+    }
+    .screen-row span { font-size: 13px; font-weight: 600; color: #546e7a; }
+    .ref-btn {
+      width: 28px; height: 28px; border-radius: 4px; border: none;
+      background: var(--teal); color: #fff; font-size: 15px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .ref-btn:hover { background: var(--teal-dark); }
+
+    /* QUESTION */
+    .q-wrap { flex: 1; padding: 18px 24px 10px; }
+    .q-no { font-size: 11px; color: #90a4ae; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 7px; }
+    .q-text { font-size: 15px; font-weight: 500; color: #1a2533; line-height: 1.65; margin-bottom: 20px; }
+    .opts { display: flex; flex-direction: column; gap: 9px; }
+    .opt {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 15px; border-radius: 8px;
+      border: 1.5px solid #e2e8f0; background: #f8fafc;
+      cursor: pointer; font-size: 14px; color: #334155;
+      transition: background .15s, border-color .15s;
+    }
+    .opt:hover { background: #e0f2f1; border-color: var(--teal); }
+    .opt input[type=radio] { accent-color: var(--teal); width: 17px; height: 17px; flex-shrink: 0; }
+    .opt.sel { background: #d0eeec; border-color: var(--teal); }
+    .opt-ltr { font-weight: 700; color: var(--teal); min-width: 20px; }
+
+    /* DEBUG PANEL */
+    .debug {
+      margin: 10px 24px 12px;
+      border: 1.5px solid #e2e8f0; border-radius: 8px; overflow: hidden;
+      font-size: 12px;
+    }
+    .dbg-head {
+      background: #1e293b; color: #64748b; padding: 7px 14px;
+      font-size: 11px; font-weight: 700; letter-spacing: .5px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: blink 1.2s infinite; }
+    .dbg-body {
+      background: #0f172a; color: #e2e8f0;
+      padding: 10px 14px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px;
+      font-family: 'Courier New', monospace;
+    }
+    .dbg-row { display: flex; justify-content: space-between; gap: 6px; }
+    .dk { color: #64748b; }
+    .dv { color: #22d3ee; font-weight: 700; }
+    .dv.bad { color: #f87171; }
+    .dv.ok  { color: #4ade80; }
+
+    /* ACTION BAR */
+    .action-bar {
+      padding: 12px 22px; border-top: 1px solid #e8ecef;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      background: #fff;
+    }
+    .btn-prev, .btn-mark, .btn-next {
+      padding: 9px 20px; border-radius: 6px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: transform .1s, box-shadow .15s;
+    }
+    .btn-prev {
+      border: 1.5px solid #cfd8dc; background: #fff; color: #546e7a;
+    }
+    .btn-prev:hover { background: #f5f5f5; }
+    .btn-prev:disabled { opacity: .4; cursor: default; }
+    .btn-mark {
+      border: none; background: #e53935; color: #fff;
+    }
+    .btn-mark:hover { box-shadow: 0 3px 10px rgba(229,57,53,.35); }
+    .btn-next {
+      margin-left: auto; border: none; background: var(--teal); color: #fff;
+    }
+    .btn-next:hover { background: var(--teal-dark); }
+    .btn-prev:active, .btn-mark:active, .btn-next:active { transform: scale(.97); }
+
+    /* MODAL */
+    .modal-bg {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.52); z-index: 500;
+      align-items: center; justify-content: center;
+    }
+    .modal-bg.show { display: flex; }
+    .modal {
+      background: #fff; border-radius: 10px; padding: 32px 38px;
+      max-width: 420px; width: 90%; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    }
+    .modal .mi { font-size: 48px; margin-bottom: 12px; }
+    .modal h2 { font-size: 18px; color: #1a2533; margin-bottom: 8px; }
+    .modal p { font-size: 13px; color: #607d8b; line-height: 1.6; margin-bottom: 22px; }
+    .modal-btn {
+      padding: 10px 28px; border-radius: 6px; border: none;
+      background: var(--teal); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: #b0bec5; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="top-bar">
+  <div class="logo">🎓 MAKAUT — Mock Exam Portal (Simulator)</div>
+  <div class="top-chips">
+    <div class="chip v"><span class="dot"></span>Visited <span id="sVis">0</span>&nbsp;/&nbsp;<span id="sTotal">24</span></div>
+    <div class="chip nv"><span class="dot"></span>Not Visited <span id="sNot">24</span></div>
+    <div class="chip r"><span class="dot"></span>Review <span id="sRev">0</span></div>
+    <div class="chip t" id="timerChip">⏱ <span id="timerTxt">19:45</span></div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-title">MOCK EXAM<br>ODD SEM 2021–22</div>
+    <div class="q-grid" id="qGrid"></div>
+    <div class="sb-break" id="breakBtn">
+      <span style="font-size:16px">☕</span> Take a break
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="content" id="mainContent">
+
+    <!-- Warning banner — shows on tab switch, exactly like MAKAUT -->
+    <div class="warn-banner" id="warnBanner">
+      <span class="warn-icon">⚠️</span>
+      <span id="warnTxt">You have moved 1 times from the Test window. You are not allowed to do this.</span>
+      <button class="warn-close" id="warnClose">×</button>
+    </div>
+
+    <!-- Screen label -->
+    <div class="screen-row">
+      <span id="screenLbl">Screen. 1</span>
+      <button class="ref-btn" title="Refresh question" onclick="renderQ()">↻</button>
+    </div>
+
+    <!-- Question -->
+    <div class="q-wrap">
+      <div class="q-no" id="qNo">Question 1 of 24</div>
+      <div class="q-text" id="qText"></div>
+      <div class="opts" id="optsList"></div>
+    </div>
+
+    <!-- Live Detection Debug Panel -->
+    <div class="debug">
+      <div class="dbg-head">
+        <span class="live-dot"></span>
+        TAB-SWITCH DETECTION ENGINE — Live Monitor
+        <span style="margin-left:auto;font-size:10px;color:#475569">(If extension bypass works, all values should stay green)</span>
+      </div>
+      <div class="dbg-body">
+        <div class="dbg-row"><span class="dk">document.hidden</span><span class="dv ok" id="dHidden">false</span></div>
+        <div class="dbg-row"><span class="dk">visibilityState</span><span class="dv ok" id="dVisState">visible</span></div>
+        <div class="dbg-row"><span class="dk">blur events fired</span><span class="dv" id="dBlur">0</span></div>
+        <div class="dbg-row"><span class="dk">visibilitychange fires</span><span class="dv" id="dVisChg">0</span></div>
+        <div class="dbg-row"><span class="dk">Polling result</span><span class="dv ok" id="dPoll">🟢 CLEAR</span></div>
+        <div class="dbg-row"><span class="dk">⚠ Total violations</span><span class="dv bad" id="dTotal">0</span></div>
+        <div class="dbg-row" style="grid-column:1/-1;margin-top:4px;border-top:1px solid #1e293b;padding-top:4px"><span class="dk">Extension bypass active?</span><span class="dv" id="dBypass">Checking...</span></div>
+      </div>
+    </div>
+
+    <!-- Action bar -->
+    <div class="action-bar">
+      <button class="btn-prev" id="btnPrev" onclick="goQ(-1)" disabled>◀ Previous</button>
+      <button class="btn-mark" id="btnMark" onclick="toggleMark()">🔖 Mark for Review</button>
+      <button class="btn-next" id="btnNext" onclick="goQ(1)">Next ▶</button>
+    </div>
+
+  </main>
+</div>
+
+<!-- BREAK MODAL -->
+<div class="modal-bg" id="breakModal">
+  <div class="modal">
+    <div class="mi">☕</div>
+    <h2>Taking a break?</h2>
+    <p>Your timer is still running and the exam will continue to monitor for tab switches while you're away. Click Resume when you're ready.</p>
+    <button class="modal-btn" onclick="document.getElementById('breakModal').classList.remove('show')">Resume Exam</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// QUESTION BANK (24 questions)
+// ═══════════════════════════════════════════════════════════════
+const QS = [
+  { q:"Entomology is the science that studies:", o:["The formation of rocks","Behavior of human beings","The origin and history of technical and scientific terms","Insects"], a:"D" },
+  { q:"What is the time complexity of searching in a balanced Binary Search Tree?", o:["O(n)","O(log n)","O(1)","O(n log n)"], a:"B" },
+  { q:"Which layer of the OSI model is primarily responsible for routing packets?", o:["Data Link Layer","Transport Layer","Network Layer","Session Layer"], a:"C" },
+  { q:"What does RAM stand for?", o:["Read Access Memory","Random Access Memory","Rapid Application Memory","Read And Modify"], a:"B" },
+  { q:"Which of the following is NOT a programming paradigm?", o:["Object-Oriented","Functional","Sequential","Declarative"], a:"C" },
+  { q:"The process of converting high-level source code into machine code is called:", o:["Linking","Assembling","Compiling","Interpreting"], a:"C" },
+  { q:"Which data structure follows LIFO (Last In, First Out) order?", o:["Queue","Stack","Linked List","Heap"], a:"B" },
+  { q:"What is the binary representation of the decimal number 25?", o:["10111","11001","10011","11010"], a:"B" },
+  { q:"Which protocol is used for sending outgoing email messages?", o:["HTTP","FTP","SMTP","IMAP"], a:"C" },
+  { q:"In SQL, which command retrieves data from a database table?", o:["INSERT","UPDATE","SELECT","DELETE"], a:"C" },
+  { q:"Which sorting algorithm has the best average-case time complexity of O(n log n)?", o:["Bubble Sort","Selection Sort","Quick Sort","Insertion Sort"], a:"C" },
+  { q:"What is the full form of HTTP?", o:["HyperText Transfer Protocol","High Transfer Text Protocol","HyperText Transmission Protocol","High Text Transfer Protocol"], a:"A" },
+  { q:"A primary key in a relational database must be:", o:["Unique and Not NULL","Unique only","Not NULL only","Duplicates allowed"], a:"A" },
+  { q:"Which logic gate outputs TRUE only when ALL inputs are TRUE?", o:["OR","NOT","AND","XOR"], a:"C" },
+  { q:"Which of the following is an example of volatile memory?", o:["HDD","SSD","ROM","RAM"], a:"D" },
+  { q:"The Internet Protocol version currently in widest deployment is:", o:["IPv3","IPv4","IPv5","IPv8"], a:"B" },
+  { q:"What is encapsulation in Object-Oriented Programming?", o:["Hiding data and methods inside a class","Inheriting from a parent class","Overriding a base method","Creating multiple class instances"], a:"A" },
+  { q:"The worst-case time complexity of Bubble Sort is:", o:["O(n log n)","O(n)","O(n²)","O(log n)"], a:"C" },
+  { q:"Which symbol is used for single-line comments in Python?", o:["//","/* */","#","--"], a:"C" },
+  { q:"What does CPU stand for?", o:["Control Processing Unit","Central Processing Unit","Computer Processing Unit","Central Program Unit"], a:"B" },
+  { q:"Which layer of the TCP/IP model handles host-to-host communication?", o:["Application","Internet","Network Access","Transport"], a:"D" },
+  { q:"Which of the following is a NoSQL database?", o:["MySQL","PostgreSQL","MongoDB","SQLite"], a:"C" },
+  { q:"In computer architecture, the fetch-decode-execute cycle is performed by the:", o:["RAM","GPU","CPU","ROM"], a:"C" },
+  { q:"Which data structure is best suited for implementing a printer spooler queue?", o:["Stack","Queue","Binary Tree","Hash Table"], a:"B" }
+];
+
+const LETTERS = ['A','B','C','D'];
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let cur         = 0;
+let answers     = new Array(QS.length).fill(null);
+let marked      = new Array(QS.length).fill(false);
+let visited     = new Array(QS.length).fill(false);
+let violations  = 0;
+let timerSec    = 19*60+45;
+
+// debug counters
+let cBlur    = 0;
+let cVisChg  = 0;
+
+// ═══════════════════════════════════════════════════════════════
+// BYPASS DETECTION CHECK — Did the extension patch us?
+// ═══════════════════════════════════════════════════════════════
+(function checkBypassActive() {
+  // Wait a tick so any injected scripts have run
+  setTimeout(function() {
+    const bypassEl = document.getElementById('dBypass');
+    if (!bypassEl) return;
+
+    const checks = [];
+
+    // Check 1: document.hidden should always be false even when page is obscured
+    // We can only infer this from the spoofed property descriptor
+    const hiddenDesc = Object.getOwnPropertyDescriptor(document, 'hidden');
+    const isHiddenSpoofed = hiddenDesc && typeof hiddenDesc.get === 'function';
+    checks.push({ name: 'document.hidden spoofed', ok: isHiddenSpoofed });
+
+    // Check 2: addEventListener should have been patched (test with a sentinel)
+    let intercepted = false;
+    const testFn = function() { intercepted = true; };
+    // If patched, testFn will be swapped for a no-op and never called on real events
+    // We detect patching by checking if the function wrapping happened
+    const origStr = window.addEventListener.toString();
+    const isPatched = !origStr.includes('[native code]');
+    checks.push({ name: 'addEventListener patched', ok: isPatched });
+
+    const allOk = checks.every(c => c.ok);
+    const someOk = checks.some(c => c.ok);
+
+    if (allOk) {
+      bypassEl.textContent = '✅ YES — Full bypass active (extension working!)';
+      bypassEl.className = 'dv ok';
+    } else if (someOk) {
+      const failed = checks.filter(c => !c.ok).map(c => c.name).join(', ');
+      bypassEl.textContent = '⚠ Partial — Missing: ' + failed;
+      bypassEl.className = 'dv';
+      bypassEl.style.color = '#fbbf24';
+    } else {
+      bypassEl.textContent = '❌ NO — Extension bypass NOT detected (tab switches WILL be logged)';
+      bypassEl.className = 'dv bad';
+    }
+  }, 800);
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// TAB-SWITCH DETECTION — Same 4 methods MAKAUT uses
+// ═══════════════════════════════════════════════════════════════
+
+// ── METHOD 1: visibilitychange event ──────────────────────────
+document.addEventListener('visibilitychange', function() {
+  cVisChg++;
+  document.getElementById('dVisChg').textContent = cVisChg;
+  if (document.hidden || document.visibilityState !== 'visible') {
+    flagViolation('visibilitychange event fired');
+  }
+});
+
+// ── METHOD 2: window blur event ───────────────────────────────
+window.addEventListener('blur', function() {
+  cBlur++;
+  document.getElementById('dBlur').textContent = cBlur;
+  flagViolation('window.blur event fired');
+});
+
+// ── METHOD 3: setInterval POLLING document.hidden (hardest to defeat) ─
+setInterval(function() {
+  const h  = document.hidden;
+  const vs = document.visibilityState;
+
+  const elH  = document.getElementById('dHidden');
+  const elVS = document.getElementById('dVisState');
+  const elP  = document.getElementById('dPoll');
+
+  elH.textContent  = String(h);
+  elVS.textContent = vs;
+
+  if (h || vs !== 'visible') {
+    elH.className  = 'dv bad';
+    elVS.className = 'dv bad';
+    elP.textContent = '🔴 DETECTED (page is hidden!)';
+    elP.className   = 'dv bad';
+    flagViolation('polling setInterval detected hidden page');
+  } else {
+    elH.className  = 'dv ok';
+    elVS.className = 'dv ok';
+    elP.textContent = '🟢 CLEAR (page visible)';
+    elP.className   = 'dv ok';
+  }
+}, 500);
+
+// ── METHOD 4: mouseleave ──────────────────────────────────────
+document.addEventListener('mouseleave', function() {
+  flagViolation('mouseleave event fired');
+});
+
+// ─── Core violation recorder ──────────────────────────────────
+let lastViolationTime = 0;
+// Delay start: give the extension 1.5s to register its bypass before counting
+const EXAM_START_TIME = Date.now();
+function flagViolation(reason) {
+  // Grace period: ignore violations in first 1.5 seconds (extension loading)
+  if (Date.now() - EXAM_START_TIME < 1500) return;
+  // Debounce: don't count the same event burst as multiple violations
+  const now = Date.now();
+  if (now - lastViolationTime < 1200) return;
+  lastViolationTime = now;
+
+  violations++;
+  document.getElementById('dTotal').textContent = violations;
+
+  const banner = document.getElementById('warnBanner');
+  document.getElementById('warnTxt').textContent =
+    `You have moved ${violations} times from the Test window. You are not allowed to do this.`;
+  banner.classList.add('show');
+  console.warn(`[MAKAUT Exam Simulator] Violation #${violations} via: ${reason}`);
+}
+
+// ─── Dismiss banner ───────────────────────────────────────────
+document.getElementById('warnClose').addEventListener('click', () => {
+  document.getElementById('warnBanner').classList.remove('show');
+});
+
+// ═══════════════════════════════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════════════════════════════
+setInterval(() => {
+  if (timerSec <= 0) return;
+  timerSec--;
+  const m = String(Math.floor(timerSec/60)).padStart(2,'0');
+  const s = String(timerSec%60).padStart(2,'0');
+  document.getElementById('timerTxt').textContent = `${m}:${s}`;
+  const c = document.getElementById('timerChip');
+  if (timerSec <= 120) c.classList.add('blink');
+  else c.classList.remove('blink');
+}, 1000);
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER QUESTION
+// ═══════════════════════════════════════════════════════════════
+function renderQ() {
+  visited[cur] = true;
+  const qd = QS[cur];
+  document.getElementById('qNo').textContent      = `Question ${cur+1} of ${QS.length}`;
+  document.getElementById('screenLbl').textContent = `Screen. ${cur+1}`;
+  document.getElementById('qText').textContent     = qd.q;
+
+  const list = document.getElementById('optsList');
+  list.innerHTML = '';
+  qd.o.forEach((txt, i) => {
+    const lbl = document.createElement('label');
+    lbl.className = 'opt';
+    if (answers[cur] === LETTERS[i]) lbl.classList.add('sel');
+
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = `q${cur}`;
+    radio.value = LETTERS[i];
+    if (answers[cur] === LETTERS[i]) radio.checked = true;
+
+    radio.addEventListener('change', () => {
+      answers[cur] = LETTERS[i];
+      list.querySelectorAll('.opt').forEach(l => l.classList.remove('sel'));
+      lbl.classList.add('sel');
+      refreshGrid();
+      updateStats();
+    });
+
+    const ltr  = document.createElement('span');
+    ltr.className   = 'opt-ltr';
+    ltr.textContent = LETTERS[i] + ')';
+
+    const span = document.createElement('span');
+    span.textContent = txt;
+
+    lbl.appendChild(radio);
+    lbl.appendChild(ltr);
+    lbl.appendChild(span);
+    list.appendChild(lbl);
+  });
+
+  document.getElementById('btnPrev').disabled = cur === 0;
+  document.getElementById('btnNext').textContent = cur === QS.length-1 ? 'Submit ✓' : 'Next ▶';
+  document.getElementById('btnMark').textContent  = marked[cur] ? '🔖 Unmark Review' : '🔖 Mark for Review';
+
+  refreshGrid();
+  updateStats();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GRID
+// ═══════════════════════════════════════════════════════════════
+function refreshGrid() {
+  const g = document.getElementById('qGrid');
+  g.innerHTML = '';
+  for (let i = 0; i < QS.length; i++) {
+    const b = document.createElement('button');
+    b.className = 'qb';
+    b.textContent = i+1;
+    b.id = `qb${i}`;
+    if (i === cur) b.classList.add('cur');
+    if (marked[i]) b.classList.add('mkd');
+    else if (answers[i]) b.classList.add('ans');
+    b.onclick = () => { cur = i; renderQ(); };
+    g.appendChild(b);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NAV / MARK
+// ═══════════════════════════════════════════════════════════════
+function goQ(d) {
+  const n = cur + d;
+  if (n < 0 || n >= QS.length) return;
+  cur = n;
+  renderQ();
+  document.getElementById('mainContent').scrollTop = 0;
+}
+
+function toggleMark() {
+  marked[cur] = !marked[cur];
+  document.getElementById('btnMark').textContent = marked[cur] ? '🔖 Unmark Review' : '🔖 Mark for Review';
+  refreshGrid();
+  updateStats();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════════════════════
+function updateStats() {
+  const v = visited.filter(Boolean).length;
+  const r = marked.filter(Boolean).length;
+  document.getElementById('sVis').textContent  = v;
+  document.getElementById('sNot').textContent  = QS.length - v;
+  document.getElementById('sRev').textContent  = r;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ANTI-COPY / RIGHT-CLICK (same as real MAKAUT)
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && ['c','v','x','a','u'].includes(e.key.toLowerCase())) e.preventDefault();
+  if (e.key === 'F12') e.preventDefault();
+});
+document.addEventListener('selectstart', e => e.preventDefault());
+document.addEventListener('copy', e => e.preventDefault());
+
+// ═══════════════════════════════════════════════════════════════
+// BREAK
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('breakBtn').addEventListener('click', () => {
+  document.getElementById('breakModal').classList.add('show');
+});
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+renderQ();
+</script>
+</body>
+</html>

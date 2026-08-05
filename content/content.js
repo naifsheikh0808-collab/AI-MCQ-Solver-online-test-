@@ -1,8 +1,11 @@
-// Content Script for MCQ Solver AI
+// Content Script for MCQ Solver AI (Isolated World)
+// Anti-cheat bypass is handled by content/bypass.js running in world: "MAIN"
+// This script handles all MCQ solving logic using chrome.* APIs.
 
 if (typeof window.mcqSolverInitialized === 'undefined') {
 window.mcqSolverInitialized = true;
 console.log("MCQ Solver AI: Content script loaded.");
+
 
 // Listener for messages from background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -163,24 +166,110 @@ async function processPayload(payload, isStealth, forceRecheck) {
 function enableAntiCheatBypass() {
   console.log("MCQ Solver AI: Neutralizing anti-cheat scripts (enabling right-click, selection, and hiding tab-switches)...");
 
-  // 1. Re-enable Right Click (Context Menu) & Copy/Paste
+  // ─── PHASE 1: Spoof Page Visibility API at the property level ────────────
+  // This defeats POLLING-based detection (setInterval checking document.hidden)
+  // which stopPropagation() alone cannot block. MAKAUT uses this technique.
+  try {
+    Object.defineProperty(document, 'hidden', {
+      get: () => false,
+      configurable: true
+    });
+    Object.defineProperty(document, 'visibilityState', {
+      get: () => 'visible',
+      configurable: true
+    });
+    Object.defineProperty(document, 'webkitVisibilityState', {
+      get: () => 'visible',
+      configurable: true
+    });
+    Object.defineProperty(document, 'webkitHidden', {
+      get: () => false,
+      configurable: true
+    });
+    console.log("MCQ Solver AI: Page Visibility API spoofed ✅");
+  } catch (e) {
+    console.warn("MCQ Solver AI: Could not spoof visibility API (non-critical):", e.message);
+  }
+
+  // ─── PHASE 2: Intercept addEventListener to silently swallow visibility/blur handlers ─
+  // This defeats sites that attach handlers BEFORE our content script runs
+  // by monkey-patching addEventListener so those handlers never fire.
+  const _origDocAdd = document.addEventListener.bind(document);
+  const _origWinAdd = window.addEventListener.bind(window);
+  const BLOCKED_EVENTS = new Set([
+    'visibilitychange', 'webkitvisibilitychange', 'blur', 'focus',
+    'mouseleave', 'mouseout', 'pagehide', 'freeze'
+  ]);
+
+  const makeInterceptor = (origFn, scope) => function(type, listener, options) {
+    if (typeof type === 'string' && BLOCKED_EVENTS.has(type.toLowerCase())) {
+      // Wrap the listener: call it with a fake "visible" event so any
+      // internal state the site tracks still thinks the page is visible.
+      const fakeListener = function(e) {
+        // For visibilitychange: let site think page is still visible
+        if (type === 'visibilitychange' || type === 'webkitvisibilitychange') {
+          // Don't call the real listener — swallow entirely
+          return;
+        }
+        // For blur/focus/mouseleave: also swallow
+        return;
+      };
+      return origFn.call(scope, type, fakeListener, options);
+    }
+    return origFn.call(scope, type, listener, options);
+  };
+
+  try {
+    document.addEventListener = makeInterceptor(_origDocAdd, document);
+    window.addEventListener = makeInterceptor(_origWinAdd, window);
+    console.log("MCQ Solver AI: addEventListener interceptor active ✅");
+  } catch (e) {
+    console.warn("MCQ Solver AI: addEventListener interception failed (non-critical):", e.message);
+  }
+
+  // ─── PHASE 3: Dispatch fake 'focus' event to reset any existing tab-switch counter ─
+  // Some portals (like MAKAUT) store switch count in a variable updated on
+  // visibilitychange. Firing a focus event resets their internal state.
+  try {
+    setTimeout(() => {
+      window.dispatchEvent(new Event('focus'));
+      document.dispatchEvent(new Event('focus'));
+    }, 500);
+  } catch (e) {}
+
+  // ─── PHASE 4: stopPropagation fallback for event-based listeners ──────────
   const preventBlock = (e) => e.stopPropagation();
-  document.addEventListener('contextmenu', preventBlock, true);
-  document.addEventListener('copy', preventBlock, true);
-  document.addEventListener('cut', preventBlock, true);
-  document.addEventListener('paste', preventBlock, true);
-  document.addEventListener('keydown', preventBlock, true);
+  _origDocAdd('contextmenu', preventBlock, true);
+  _origDocAdd('copy', preventBlock, true);
+  _origDocAdd('cut', preventBlock, true);
+  _origDocAdd('paste', preventBlock, true);
+  _origDocAdd('keydown', preventBlock, true);
+  _origDocAdd('visibilitychange', preventBlock, true);
+  _origDocAdd('mouseleave', preventBlock, true);
+  _origDocAdd('selectstart', preventBlock, true);
+  _origWinAdd('blur', preventBlock, true);
+  _origWinAdd('focus', preventBlock, true);
 
-  // 2. Prevent Tab-Switch / Blur Detections
-  document.addEventListener('visibilitychange', preventBlock, true);
-  window.addEventListener('blur', preventBlock, true);
-  window.addEventListener('focus', preventBlock, true);
-  document.addEventListener('mouseleave', preventBlock, true);
+  // ─── PHASE 5: Nullify document.onvisibilitychange property ───────────────
+  try {
+    Object.defineProperty(document, 'onvisibilitychange', {
+      get: () => null,
+      set: (fn) => { /* swallow any assignment */ },
+      configurable: true
+    });
+    Object.defineProperty(document, 'onblur', {
+      get: () => null,
+      set: (fn) => { /* swallow */ },
+      configurable: true
+    });
+    Object.defineProperty(window, 'onblur', {
+      get: () => null,
+      set: (fn) => { /* swallow */ },
+      configurable: true
+    });
+  } catch (e) {}
 
-  // 3. Re-enable Text Selection
-  document.addEventListener('selectstart', preventBlock, true);
-  
-  // Also force CSS to allow user selection
+  // ─── PHASE 6: Force CSS to allow user text selection ─────────────────────
   const style = document.createElement('style');
   style.innerHTML = `
     * {
@@ -191,6 +280,8 @@ function enableAntiCheatBypass() {
     }
   `;
   document.documentElement.appendChild(style);
+
+  console.log("MCQ Solver AI: Full anti-cheat bypass activated ✅");
 }
 
 function parseDOMForMCQ() {
